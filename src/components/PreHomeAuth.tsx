@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { lovable } from "@/integrations/lovable";
 import { supabase } from "@/integrations/supabase/client";
-import baseraLogo from "../../assets/branding/basera-original.png";
+import baseraLogo from "@/assets/branding/basera-original.png";
 import welcomeIllustration from "@/assets/basera-welcome.png";
 import "./PreHomeAuth.css";
 
