@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { lovable } from "@/integrations/lovable";
 import { supabase } from "@/integrations/supabase/client";
-import baseraLogo from "@/assets/branding/basera-original.png";
+import baseraLogo from "@/assets/branding/basera-official-logo.png.asset.json";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import "./PreHomeAuth.css";
 
@@ -135,7 +135,7 @@ export function PreHomeAuth({ stage, onStageChange }: PreHomeAuthProps) {
         <section className="prehome-welcome" aria-labelledby="welcome-title">
           <img
             className="prehome-welcome-logo"
-            src={baseraLogo}
+            src={baseraLogo.url}
             alt="Basera — Find Your Next Home"
             width={768}
             height={768}
@@ -165,7 +165,7 @@ export function PreHomeAuth({ stage, onStageChange }: PreHomeAuthProps) {
         </Button>
       </nav>
       <section className="prehome-login" aria-label="Sign in to Basera">
-        <img className="prehome-auth-logo" src={baseraLogo} alt="Basera — Find Your Next Home" width={768} height={768} />
+        <img className="prehome-auth-logo" src={baseraLogo.url} alt="Basera — Find Your Next Home" width={512} height={512} />
         <Button type="button" variant="link" className="prehome-language" onClick={() => setHindi((value) => !value)}>
           {hindi ? "Browse in English" : "हिंदी में ब्राउज़ करें"}
         </Button>
