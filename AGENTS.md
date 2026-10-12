@@ -11,3 +11,4 @@
 
 - Keep pre-home welcome and sign-in views in PreHomeAuth, with email entry separate from method selection, so the existing marketplace and session flow stay intact.
 - Legal sign-in links open accessible dialogs until official documents are supplied; never invent contractual policies.
+- Keep the splash timer and its cleanup in PreHomeAuth, using a separate transparent logo asset and splash-only light tokens so login styling and authenticated sessions remain unchanged.

@@ -64,6 +64,9 @@
 }
 
 :root {
+  --splash-background: oklch(1 0 0);
+  --splash-foreground: oklch(0.129 0.042 264.695);
+  --splash-muted-foreground: oklch(0.554 0.046 257.417);
   --brand-green: oklch(0.34 0.065 168);
   --brand-orange: oklch(0.73 0.16 65);
   --radius: 0.625rem;
