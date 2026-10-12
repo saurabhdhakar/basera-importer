@@ -304,6 +304,7 @@
 /* Logo-led entry screens. Welcome copy and primary button remain unchanged. */
 .prehome-welcome-logo {
   display: block;
+  border-radius: 22%;
   width: min(100%, 340px);
   height: auto;
   aspect-ratio: 1;
@@ -338,6 +339,7 @@
 
 .prehome-auth-logo {
   display: block;
+  border-radius: 22%;
   width: 246px;
   height: 246px;
   align-self: center;
