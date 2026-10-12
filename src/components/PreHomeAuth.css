@@ -301,7 +301,39 @@
   .prehome-get-started { animation: none; }
   .prehome-primary { transition: none; }
 }
-/* Logo-led entry screens. Welcome copy and primary button remain unchanged. */
+/* Splash-only tokens ignore dark mode without affecting the sign-in screen. */
+.prehome-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  color-scheme: light;
+  background: var(--splash-background);
+  color: var(--splash-foreground);
+}
+
+.prehome-splash .prehome-welcome {
+  height: calc(100svh - 48px);
+  justify-content: center;
+  animation: none;
+}
+
+.prehome-splash .prehome-welcome-copy {
+  position: absolute;
+  bottom: max(40px, env(safe-area-inset-bottom));
+  left: 24px;
+  right: 24px;
+}
+
+.prehome-splash .prehome-welcome-copy p {
+  color: var(--splash-muted-foreground);
+}
+
+.prehome-splash .prehome-welcome-logo {
+  width: min(100%, 340px, 48svh);
+  margin: 0;
+  border-radius: 0;
+}
+
 .prehome-welcome-logo {
   display: block;
   border-radius: 22%;

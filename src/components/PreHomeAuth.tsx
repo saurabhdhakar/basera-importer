@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import {
   ArrowLeft,
   Info,
@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { lovable } from "@/integrations/lovable";
 import { supabase } from "@/integrations/supabase/client";
 import baseraLogo from "@/assets/branding/basera-official-logo.png.asset.json";
+import splashLogo from "@/assets/branding/basera-splash-logo.png.asset.json";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import "./PreHomeAuth.css";
 
@@ -44,11 +45,11 @@ export function PreHomeAuth({ stage, onStageChange }: PreHomeAuthProps) {
     setMethod(next);
   };
 
-  const setAuthStage = () => {
-    setError("");
-    setConfirmation(false);
-    onStageChange("auth");
-  };
+  useEffect(() => {
+    if (stage !== "welcome") return;
+    const timer = window.setTimeout(() => onStageChange("auth"), 2500);
+    return () => window.clearTimeout(timer);
+  }, [stage, onStageChange]);
 
   const handleSocialSignIn = async (provider: "google" | "apple") => {
     setError("");
@@ -131,11 +132,11 @@ export function PreHomeAuth({ stage, onStageChange }: PreHomeAuthProps) {
 
   if (stage === "welcome") {
     return (
-      <main className="prehome-auth">
+      <main className="prehome-auth prehome-splash">
         <section className="prehome-welcome" aria-labelledby="welcome-title">
           <img
             className="prehome-welcome-logo"
-            src={baseraLogo.url}
+            src={splashLogo.url}
             alt="Basera — Find Your Next Home"
             width={768}
             height={768}
@@ -145,9 +146,6 @@ export function PreHomeAuth({ stage, onStageChange }: PreHomeAuthProps) {
             <h1 id="welcome-title">Apna Basera, Ab Aur Bhi Paas</h1>
             <p>Find a place that feels like home.</p>
           </div>
-          <Button className="prehome-primary prehome-get-started" onClick={setAuthStage}>
-            Get Started <span aria-hidden="true">→</span>
-          </Button>
         </section>
       </main>
     );
