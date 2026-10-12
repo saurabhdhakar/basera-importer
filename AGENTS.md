@@ -8,3 +8,6 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Keep pre-home welcome and sign-in views in PreHomeAuth, with email entry separate from method selection, so the existing marketplace and session flow stay intact.
+- Legal sign-in links open accessible dialogs until official documents are supplied; never invent contractual policies.

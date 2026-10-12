@@ -1,6 +1,9 @@
 import { useState, type FormEvent } from "react";
 import {
   ArrowLeft,
+  Info,
+  Smartphone,
+  X,
   Eye,
   EyeOff,
   Home,
@@ -12,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { lovable } from "@/integrations/lovable";
 import { supabase } from "@/integrations/supabase/client";
 import baseraLogo from "@/assets/branding/basera-original.png";
-import welcomeIllustration from "@/assets/basera-welcome.png";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import "./PreHomeAuth.css";
 
 type AuthStage = "welcome" | "auth" | "opening";
@@ -30,6 +33,16 @@ export function PreHomeAuth({ stage, onStageChange }: PreHomeAuthProps) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [confirmation, setConfirmation] = useState(false);
+  const [method, setMethod] = useState<"options" | "email" | "phone">("options");
+  const [hindi, setHindi] = useState(false);
+  const [dialog, setDialog] = useState<"help" | "terms" | "privacy" | null>(null);
+  const copy = (english: string, translated: string) => hindi ? translated : english;
+
+  const selectMethod = (next: "options" | "email" | "phone") => {
+    setError("");
+    setConfirmation(false);
+    setMethod(next);
+  };
 
   const setAuthStage = () => {
     setError("");
@@ -120,16 +133,12 @@ export function PreHomeAuth({ stage, onStageChange }: PreHomeAuthProps) {
     return (
       <main className="prehome-auth">
         <section className="prehome-welcome" aria-labelledby="welcome-title">
-          <div className="prehome-brand-mark" aria-label="Basera">
-            <img src={baseraLogo} alt="" width={44} height={44} />
-            <span>Basera</span>
-          </div>
           <img
-            className="prehome-illustration"
-            src={welcomeIllustration}
-            alt="A welcoming home surrounded by plants, with keys and a location marker"
-            width={1536}
-            height={1024}
+            className="prehome-welcome-logo"
+            src={baseraLogo}
+            alt="Basera — Find Your Next Home"
+            width={768}
+            height={768}
             fetchPriority="high"
           />
           <div className="prehome-welcome-copy">
@@ -145,57 +154,63 @@ export function PreHomeAuth({ stage, onStageChange }: PreHomeAuthProps) {
   }
 
   return (
-    <main className="prehome-auth">
-      <section className="prehome-login" aria-labelledby="login-title">
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="prehome-back"
-          aria-label="Back to welcome"
-          onClick={() => { setError(""); setConfirmation(false); onStageChange("welcome"); }}
-        >
-          <ArrowLeft aria-hidden="true" />
+    <main className="prehome-auth prehome-auth-screen" lang={hindi ? "hi" : "en"}>
+      <nav className="prehome-nav" aria-label="Sign-in navigation">
+        <Button type="button" variant="ghost" size="icon" aria-label="Close sign-in" title="Close sign-in"
+          onClick={() => { selectMethod("options"); onStageChange("welcome"); }}>
+          <X aria-hidden="true" />
         </Button>
-        <div className="prehome-login-brand">
-          <img src={baseraLogo} alt="" width={36} height={36} />
-          <span>Basera</span>
-        </div>
-        <h1 id="login-title">Welcome Back! Let&apos;s find your Basera</h1>
-        <p className="prehome-login-subtitle">Sign in or create an account to find your place.</p>
+        <Button type="button" variant="ghost" className="prehome-help" onClick={() => setDialog("help")}>
+          <Info aria-hidden="true" /> {copy("Help", "सहायता")}
+        </Button>
+      </nav>
+      <section className="prehome-login" aria-label="Sign in to Basera">
+        <img className="prehome-auth-logo" src={baseraLogo} alt="Basera — Find Your Next Home" width={768} height={768} />
+        <Button type="button" variant="link" className="prehome-language" onClick={() => setHindi((value) => !value)}>
+          {hindi ? "Browse in English" : "हिंदी में ब्राउज़ करें"}
+        </Button>
 
         {error && <div className="prehome-error" role="alert">{error}</div>}
         {confirmation && (
           <div className="prehome-confirmation" role="status">
-            Check your email to confirm your account. Once confirmed, come back here to sign in.
+            {copy("Check your email to confirm your account. Once confirmed, come back here to sign in.", "अपना खाता सत्यापित करने के लिए ईमेल देखें, फिर वापस आकर लॉगिन करें।")}
           </div>
         )}
 
-        <div className="prehome-social-actions">
-          <Button
-            type="button"
-            variant="outline"
-            className="prehome-social prehome-google"
-            disabled={busy}
-            onClick={() => void handleSocialSignIn("google")}
-          >
-            <GoogleMark />
-            Continue with Google
+        {method === "options" && (
+          <div className="prehome-options">
+            <Button type="button" variant="outline" className="prehome-social prehome-phone" onClick={() => selectMethod("phone")}>
+              <Smartphone aria-hidden="true" /> {copy("Continue with Phone", "फ़ोन से जारी रखें")}
+            </Button>
+            <div className="prehome-divider"><span>{copy("OR", "या")}</span></div>
+            <Button type="button" variant="link" className="prehome-email-link" onClick={() => selectMethod("email")}>
+              {copy("Login with Email", "ईमेल से लॉगिन करें")}
+            </Button>
+            <div className="prehome-social-actions">
+              <Button type="button" variant="outline" className="prehome-social prehome-google" disabled={busy} onClick={() => void handleSocialSignIn("google")}>
+                <GoogleMark /> {copy("Continue with Google", "Google से जारी रखें")}
+              </Button>
+              <Button type="button" variant="default" className="prehome-social prehome-apple" disabled={busy} onClick={() => void handleSocialSignIn("apple")}>
+                <AppleMark /> {copy("Continue with Apple", "Apple से जारी रखें")}
+              </Button>
+            </div>
+          </div>
+        )}
+        {method !== "options" && (
+          <Button type="button" variant="link" className="prehome-method-back" onClick={() => selectMethod("options")}>
+            <ArrowLeft aria-hidden="true" /> {copy("All sign-in options", "सभी लॉगिन विकल्प")}
           </Button>
-          <Button
-            type="button"
-            variant="default"
-            className="prehome-social prehome-apple"
-            disabled={busy}
-            onClick={() => void handleSocialSignIn("apple")}
-          >
-            <AppleMark />
-            Continue with Apple
-          </Button>
-        </div>
-
-        <div className="prehome-divider"><span>or use Email</span></div>
-
+        )}
+        {method === "phone" && (
+          <div className="prehome-phone-notice" role="status">
+            <Smartphone className="size-6 text-brand-green" aria-hidden="true" />
+            <h1>{copy("Phone sign-in", "फ़ोन से लॉगिन")}</h1>
+            <p>{copy("Phone sign-in is not available yet. Please continue with email, Google or Apple.", "फ़ोन से लॉगिन अभी उपलब्ध नहीं है। कृपया ईमेल, Google या Apple से जारी रखें।")}</p>
+            <Button variant="outline" onClick={() => selectMethod("email")}>{copy("Login with Email", "ईमेल से लॉगिन करें")}</Button>
+          </div>
+        )}
+        {method === "email" && <>
+        <h1 className="prehome-email-title">{copy("Login with Email", "ईमेल से लॉगिन करें")}</h1>
         <form className="prehome-form" onSubmit={(event) => void handleEmailSubmit(event)}>
           <label className="prehome-field">
             <span>Your name <small>(optional)</small></span>
@@ -254,8 +269,27 @@ export function PreHomeAuth({ stage, onStageChange }: PreHomeAuthProps) {
             {busy ? "Please wait…" : "Login / Sign Up"}
           </Button>
         </form>
-        <p className="prehome-privacy-note">By continuing, you agree to use your account responsibly.</p>
+        </>}
       </section>
+      <footer className="prehome-legal">
+        {copy("If you continue, you are accepting Basera", "जारी रखने पर आप Basera की")}{" "}
+        <Button variant="link" className="prehome-legal-link" onClick={() => setDialog("terms")}>
+          {copy("Terms and Conditions", "नियम और शर्तें")}
+        </Button>{" "}{copy("and", "और")}{" "}
+        <Button variant="link" className="prehome-legal-link" onClick={() => setDialog("privacy")}>
+          {copy("Privacy Policy", "गोपनीयता नीति")}
+        </Button>{hindi ? " स्वीकार करते हैं।" : ""}
+      </footer>
+      <Dialog open={dialog !== null} onOpenChange={(open) => { if (!open) setDialog(null); }}>
+        <DialogContent className="prehome-info-dialog">
+          <DialogTitle>{dialog === "help" ? copy("Help with sign-in", "लॉगिन में सहायता") : dialog === "terms" ? copy("Terms and Conditions", "नियम और शर्तें") : copy("Privacy Policy", "गोपनीयता नीति")}</DialogTitle>
+          <DialogDescription>
+            {dialog === "help"
+              ? copy("Sign in with your existing email and password. For a new account, enter your details and confirm the email sent to you. Phone sign-in is not available yet.", "अपने ईमेल और पासवर्ड से लॉगिन करें। नया खाता बनाने के लिए विवरण भरें और भेजे गए ईमेल से खाता सत्यापित करें। फ़ोन से लॉगिन अभी उपलब्ध नहीं है।")
+              : copy("Basera has not published this document yet. Please check back later.", "Basera ने यह दस्तावेज़ अभी प्रकाशित नहीं किया है। कृपया बाद में देखें।")}
+          </DialogDescription>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }
