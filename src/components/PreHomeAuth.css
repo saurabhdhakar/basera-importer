@@ -312,24 +312,32 @@
 }
 
 .prehome-splash .prehome-welcome {
-  height: calc(100svh - 48px);
+  min-height: calc(100svh - 48px);
   justify-content: center;
+  gap: 24px;
+  font-family: Arial, "Noto Sans Devanagari", sans-serif;
   animation: none;
 }
 
 .prehome-splash .prehome-welcome-copy {
-  position: absolute;
-  bottom: max(40px, env(safe-area-inset-bottom));
-  left: 24px;
-  right: 24px;
+  width: 100%;
+  max-width: 360px;
+}
+
+.prehome-splash .prehome-welcome-copy h1 {
+  max-width: 18ch;
+  font-size: 28px;
+  line-height: 1.2;
 }
 
 .prehome-splash .prehome-welcome-copy p {
+  margin-top: 16px;
   color: var(--splash-muted-foreground);
+  font-size: 15px;
 }
 
 .prehome-splash .prehome-welcome-logo {
-  width: min(100%, 340px, 48svh);
+  width: min(100%, 340px, 44svh);
   margin: 0;
   border-radius: 0;
 }
