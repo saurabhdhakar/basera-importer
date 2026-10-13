@@ -1,4 +1,7 @@
 # Basera welcome and sign-in
+- [ ] Add Firebase Google, explicit email modes, and password reset; activation waits on Firebase web configuration.
+- [ ] Keep Phone in place with the exact maintenance alert.
+- [ ] Use transparent logos and forced-white authentication views; verify behavior.
 - [x] Convert welcome to a forced-white 2.5-second splash without a button or mock status bar.
 - [x] Remove the splash logo background without changing the login artwork.
 - [x] Test splash timing and verify the unchanged login flow.

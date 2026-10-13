@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { lovable } from "@/integrations/lovable";
 import { supabase } from "@/integrations/supabase/client";
-import baseraLogo from "@/assets/branding/basera-official-logo.png.asset.json";
+import { authenticationError, emailSchema, loginWithGoogle, resetEmailPassword, submitEmailAccount } from "@/lib/firebase-auth";
 import splashLogo from "@/assets/branding/basera-splash-logo.png.asset.json";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import "./PreHomeAuth.css";
@@ -33,15 +33,17 @@ export function PreHomeAuth({ stage, onStageChange }: PreHomeAuthProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [confirmation, setConfirmation] = useState(false);
-  const [method, setMethod] = useState<"options" | "email" | "phone">("options");
+  const [signup, setSignup] = useState(false);
+  const [pending, setPending] = useState<"google" | "apple" | "email" | "reset" | null>(null);
+  const [notice, setNotice] = useState<{ text: string; error: boolean } | null>(null);
+  const [method, setMethod] = useState<"options" | "email">("options");
   const [hindi, setHindi] = useState(false);
   const [dialog, setDialog] = useState<"help" | "terms" | "privacy" | null>(null);
   const copy = (english: string, translated: string) => hindi ? translated : english;
 
-  const selectMethod = (next: "options" | "email" | "phone") => {
+  const selectMethod = (next: "options" | "email") => {
     setError("");
-    setConfirmation(false);
+    setNotice(null);
     setMethod(next);
   };
 
@@ -51,22 +53,31 @@ export function PreHomeAuth({ stage, onStageChange }: PreHomeAuthProps) {
     return () => window.clearTimeout(timer);
   }, [stage, onStageChange]);
 
+  const notify = (text: string, failed = false) => setNotice({ text, error: failed });
+
   const handleSocialSignIn = async (provider: "google" | "apple") => {
+    if (busy) return;
     setError("");
     setBusy(true);
+    setPending(provider);
     try {
-      const result = await lovable.auth.signInWithOAuth(provider, {
-        redirect_uri: window.location.origin,
-      });
-      if (result.error) throw result.error;
-      if (result.redirected) return;
-      const { data, error: userError } = await supabase.auth.getUser();
-      if (userError) throw userError;
-      if (data.user) onStageChange("opening");
-      else setError("We couldn't verify your sign-in. Please try again.");
-    } catch {
-      setError(`We couldn't sign in with ${provider === "google" ? "Google" : "Apple"}. Please try again.`);
+      if (provider === "google") {
+        await loginWithGoogle();
+        onStageChange("opening");
+      } else {
+        const result = await lovable.auth.signInWithOAuth("apple", { redirect_uri: window.location.origin });
+        if (result.error) throw result.error;
+        if (!result.redirected) {
+          const { data, error: userError } = await supabase.auth.getUser();
+          if (userError || !data.user) throw userError ?? new Error("Sign-in failed");
+          onStageChange("opening");
+        }
+      }
+    } catch (cause) {
+      notify(provider === "google" ? authenticationError(cause) : "We couldn't sign in with Apple. Please try again.", true);
+    } finally {
       setBusy(false);
+      setPending(null);
     }
   };
 
@@ -74,49 +85,41 @@ export function PreHomeAuth({ stage, onStageChange }: PreHomeAuthProps) {
     event.preventDefault();
     if (busy) return;
     setBusy(true);
-    setError("");
-    setConfirmation(false);
-
-    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
-      password,
-    });
-
-    if (!signInError && signInData.user) {
+    setPending("email");
+    setNotice(null);
+    try {
+      await submitEmailAccount({ email, password, name: signup ? name : undefined }, signup);
       onStageChange("opening");
-      return;
-    }
-
-    const canTrySignUp = signInError?.code === "invalid_credentials" ||
-      signInError?.message.toLowerCase().includes("invalid login credentials");
-    if (!canTrySignUp) {
-      setError("We couldn't sign you in. Check your email and password, then try again.");
+    } catch (cause) {
+      notify(authenticationError(cause), true);
+    } finally {
       setBusy(false);
+      setPending(null);
+    }
+  };
+
+  const handlePasswordReset = async () => {
+    if (busy) return;
+    if (!email.trim()) {
+      notify("Please enter your email address first.", true);
       return;
     }
-
-    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-      email: email.trim(),
-      password,
-      options: {
-        emailRedirectTo: window.location.origin,
-        data: { full_name: name.trim() || undefined },
-      },
-    });
-
-    if (signUpError) {
-      setError("We couldn't sign you in or create an account. Check your details or try another email.");
+    const parsed = emailSchema.safeParse(email);
+    if (!parsed.success) {
+      notify("Please enter a valid email address.", true);
+      return;
+    }
+    setBusy(true);
+    setPending("reset");
+    try {
+      await resetEmailPassword(parsed.data);
+      notify("Password reset link sent successfully to your email!");
+    } catch (cause) {
+      notify(authenticationError(cause), true);
+    } finally {
       setBusy(false);
-      return;
+      setPending(null);
     }
-
-    if (signUpData.session && signUpData.user) {
-      onStageChange("opening");
-      return;
-    }
-
-    setConfirmation(true);
-    setBusy(false);
   };
 
   if (stage === "opening") {
@@ -163,21 +166,15 @@ export function PreHomeAuth({ stage, onStageChange }: PreHomeAuthProps) {
         </Button>
       </nav>
       <section className="prehome-login" aria-label="Sign in to Basera">
-        <img className="prehome-auth-logo" src={baseraLogo.url} alt="Basera — Find Your Next Home" width={512} height={512} />
+        <img className="prehome-auth-logo" src={splashLogo.url} alt="Basera — Find Your Next Home" width={512} height={512} />
         <Button type="button" variant="link" className="prehome-language" onClick={() => setHindi((value) => !value)}>
           {hindi ? "Browse in English" : "हिंदी में ब्राउज़ करें"}
         </Button>
 
         {error && <div className="prehome-error" role="alert">{error}</div>}
-        {confirmation && (
-          <div className="prehome-confirmation" role="status">
-            {copy("Check your email to confirm your account. Once confirmed, come back here to sign in.", "अपना खाता सत्यापित करने के लिए ईमेल देखें, फिर वापस आकर लॉगिन करें।")}
-          </div>
-        )}
-
         {method === "options" && (
           <div className="prehome-options">
-            <Button type="button" variant="outline" className="prehome-social prehome-phone" onClick={() => selectMethod("phone")}>
+            <Button type="button" variant="outline" className="prehome-social prehome-phone" onClick={() => notify("Phone login is temporarily under maintenance. Please use Continue with Google or Email for an instant login!")}>
               <Smartphone aria-hidden="true" /> {copy("Continue with Phone", "फ़ोन से जारी रखें")}
             </Button>
             <div className="prehome-divider"><span>{copy("OR", "या")}</span></div>
@@ -186,10 +183,10 @@ export function PreHomeAuth({ stage, onStageChange }: PreHomeAuthProps) {
             </Button>
             <div className="prehome-social-actions">
               <Button type="button" variant="outline" className="prehome-social prehome-google" disabled={busy} onClick={() => void handleSocialSignIn("google")}>
-                <GoogleMark /> {copy("Continue with Google", "Google से जारी रखें")}
+                {pending === "google" ? <LoaderCircle className="animate-spin" aria-hidden="true" /> : <GoogleMark />} {copy("Continue with Google", "Google से जारी रखें")}
               </Button>
               <Button type="button" variant="default" className="prehome-social prehome-apple" disabled={busy} onClick={() => void handleSocialSignIn("apple")}>
-                <AppleMark /> {copy("Continue with Apple", "Apple से जारी रखें")}
+                {pending === "apple" ? <LoaderCircle className="animate-spin" aria-hidden="true" /> : <AppleMark />} {copy("Continue with Apple", "Apple से जारी रखें")}
               </Button>
             </div>
           </div>
@@ -199,18 +196,10 @@ export function PreHomeAuth({ stage, onStageChange }: PreHomeAuthProps) {
             <ArrowLeft aria-hidden="true" /> {copy("All sign-in options", "सभी लॉगिन विकल्प")}
           </Button>
         )}
-        {method === "phone" && (
-          <div className="prehome-phone-notice" role="status">
-            <Smartphone className="size-6 text-brand-green" aria-hidden="true" />
-            <h1>{copy("Phone sign-in", "फ़ोन से लॉगिन")}</h1>
-            <p>{copy("Phone sign-in is not available yet. Please continue with email, Google or Apple.", "फ़ोन से लॉगिन अभी उपलब्ध नहीं है। कृपया ईमेल, Google या Apple से जारी रखें।")}</p>
-            <Button variant="outline" onClick={() => selectMethod("email")}>{copy("Login with Email", "ईमेल से लॉगिन करें")}</Button>
-          </div>
-        )}
         {method === "email" && <>
-        <h1 className="prehome-email-title">{copy("Login with Email", "ईमेल से लॉगिन करें")}</h1>
+        <h1 className="prehome-email-title">{signup ? copy("Create Account", "खाता बनाएँ") : copy("Login with Email", "ईमेल से लॉगिन करें")}</h1>
         <form className="prehome-form" onSubmit={(event) => void handleEmailSubmit(event)}>
-          <label className="prehome-field">
+          {signup && <label className="prehome-field">
             <span>Your name <small>(optional)</small></span>
             <span className="prehome-input-wrap">
               <Home size={18} aria-hidden="true" />
@@ -222,12 +211,13 @@ export function PreHomeAuth({ stage, onStageChange }: PreHomeAuthProps) {
                 onChange={(event) => setName(event.target.value)}
               />
             </span>
-          </label>
+          </label>}
           <label className="prehome-field">
             <span>Email Address</span>
             <span className="prehome-input-wrap">
               <Mail size={18} aria-hidden="true" />
               <input
+                maxLength={254}
                 type="email"
                 autoComplete="email"
                 placeholder="you@example.com"
@@ -243,7 +233,8 @@ export function PreHomeAuth({ stage, onStageChange }: PreHomeAuthProps) {
               <LockKeyhole size={18} aria-hidden="true" />
               <input
                 type={showPassword ? "text" : "password"}
-                autoComplete="current-password"
+                autoComplete={signup ? "new-password" : "current-password"}
+                maxLength={4096}
                 minLength={6}
                 placeholder="Enter your password"
                 required
@@ -262,9 +253,15 @@ export function PreHomeAuth({ stage, onStageChange }: PreHomeAuthProps) {
               </Button>
             </span>
           </label>
+          {!signup && <Button type="button" variant="link" className="prehome-forgot" disabled={busy} onClick={() => void handlePasswordReset()}>
+            {pending === "reset" && <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />}Forgot Password?
+          </Button>}
           <Button type="submit" className="prehome-primary prehome-submit" disabled={busy}>
             {busy ? <LoaderCircle className="animate-spin" aria-hidden="true" /> : null}
-            {busy ? "Please wait…" : "Login / Sign Up"}
+            {pending === "email" ? "Please wait…" : signup ? "Create Account / Sign Up" : "Login"}
+          </Button>
+          <Button type="button" variant="link" className="prehome-account-switch" disabled={busy} onClick={() => { setSignup((value) => !value); setNotice(null); setError(""); }}>
+            {signup ? "Already have an account? Login" : "Don't have an account? Sign Up"}
           </Button>
         </form>
         </>}
@@ -278,12 +275,16 @@ export function PreHomeAuth({ stage, onStageChange }: PreHomeAuthProps) {
           {copy("Privacy Policy", "गोपनीयता नीति")}
         </Button>{hindi ? " स्वीकार करते हैं।" : ""}
       </footer>
+      {notice && <div className="prehome-toast" role={notice.error ? "alert" : "status"}>
+        <p>{notice.text}</p>
+        <Button type="button" variant="ghost" size="icon" aria-label="Dismiss notification" onClick={() => setNotice(null)}><X aria-hidden="true" /></Button>
+      </div>}
       <Dialog open={dialog !== null} onOpenChange={(open) => { if (!open) setDialog(null); }}>
         <DialogContent className="prehome-info-dialog">
           <DialogTitle>{dialog === "help" ? copy("Help with sign-in", "लॉगिन में सहायता") : dialog === "terms" ? copy("Terms and Conditions", "नियम और शर्तें") : copy("Privacy Policy", "गोपनीयता नीति")}</DialogTitle>
           <DialogDescription>
             {dialog === "help"
-              ? copy("Sign in with your existing email and password. For a new account, enter your details and confirm the email sent to you. Phone sign-in is not available yet.", "अपने ईमेल और पासवर्ड से लॉगिन करें। नया खाता बनाने के लिए विवरण भरें और भेजे गए ईमेल से खाता सत्यापित करें। फ़ोन से लॉगिन अभी उपलब्ध नहीं है।")
+              ? copy("Sign in with Google or your email and password. Choose Sign Up to create an account, or Forgot Password? to request a reset email. Phone sign-in is temporarily under maintenance.", "अपने ईमेल और पासवर्ड से लॉगिन करें। नया खाता बनाने के लिए विवरण भरें और भेजे गए ईमेल से खाता सत्यापित करें। फ़ोन से लॉगिन अभी उपलब्ध नहीं है।")
               : copy("Basera has not published this document yet. Please check back later.", "Basera ने यह दस्तावेज़ अभी प्रकाशित नहीं किया है। कृपया बाद में देखें।")}
           </DialogDescription>
         </DialogContent>
