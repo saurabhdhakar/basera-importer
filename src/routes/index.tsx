@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { WishlistNavigation } from "@/components/WishlistNavigation";
 import { PreHomeAuth } from "@/components/PreHomeAuth";
+import { firebaseConfigured, subscribeFirebaseSession } from "@/lib/firebase-auth";
 import { supabase } from "@/integrations/supabase/client";
 
 type AppStage = "checking" | "welcome" | "auth" | "opening" | "home";
@@ -35,6 +36,18 @@ function Index() {
 
   useEffect(() => {
     let active = true;
+    if (firebaseConfigured) {
+      const unsubscribe = subscribeFirebaseSession((user) => {
+        if (!active) return;
+        if (user) setStage((current) => current === "checking" ? "home" : current === "home" ? current : "opening");
+        else setStage((current) => current === "checking" || current === "home" ? "welcome" : current);
+      }, () => { if (active) setStage("welcome"); });
+      return () => {
+        active = false;
+        unsubscribe();
+        if (openingTimer.current !== null) window.clearTimeout(openingTimer.current);
+      };
+    }
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       if (!active) return;
       if (session?.user) {
@@ -58,6 +71,12 @@ function Index() {
       if (openingTimer.current !== null) window.clearTimeout(openingTimer.current);
     };
   }, [enterHome]);
+
+  useEffect(() => {
+    if (stage !== "opening") return;
+    const timer = window.setTimeout(() => setStage("home"), 420);
+    return () => window.clearTimeout(timer);
+  }, [stage]);
 
   if (stage === "checking") {
     return (

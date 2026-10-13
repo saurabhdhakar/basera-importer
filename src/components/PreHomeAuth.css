@@ -301,7 +301,7 @@
   .prehome-get-started { animation: none; }
   .prehome-primary { transition: none; }
 }
-/* Splash-only tokens ignore dark mode without affecting the sign-in screen. */
+/* Initial views keep a scoped light palette independent of the marketplace. */
 .prehome-splash {
   position: fixed;
   inset: 0;
@@ -379,7 +379,7 @@
 
 .prehome-auth-logo {
   display: block;
-  border-radius: 22%;
+  border-radius: 0;
   width: 246px;
   height: 246px;
   align-self: center;
@@ -431,3 +431,46 @@
   .prehome-language { margin-bottom: 28px; }
   .prehome-legal { margin-top: 40px; }
 }
+
+.prehome-auth,
+.prehome-info-dialog {
+  color-scheme: light;
+  --color-background: var(--auth-background);
+  --color-foreground: var(--auth-foreground);
+  --color-primary: var(--auth-primary);
+  --color-primary-foreground: var(--auth-background);
+  --color-muted: var(--auth-muted);
+  --color-muted-foreground: var(--auth-muted-foreground);
+  --color-border: var(--auth-border);
+  --color-input: var(--auth-border);
+  --color-ring: var(--auth-primary);
+  --color-brand-green: var(--splash-foreground);
+  --color-brand-orange: var(--brand-orange);
+  --color-accent: var(--auth-muted);
+  --color-accent-foreground: var(--auth-foreground);
+  --color-popover: var(--auth-background);
+  --color-popover-foreground: var(--auth-foreground);
+  background: var(--auth-background);
+  color: var(--auth-foreground);
+}
+.prehome-forgot { justify-self: end; height: auto; padding: 0; color: var(--color-brand-green); }
+.prehome-account-switch { width: 100%; white-space: normal; height: auto; min-height: 36px; color: var(--color-brand-green); }
+.prehome-toast {
+  position: fixed;
+  z-index: 60;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(440px, calc(100% - 36px));
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 12px 14px 18px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-background);
+  color: var(--color-foreground);
+  box-shadow: var(--auth-toast-shadow);
+}
+.prehome-toast p { margin: 0; flex: 1; font-size: 14px; line-height: 1.5; }
+.prehome-toast button { flex-shrink: 0; }
