@@ -22,6 +22,13 @@ function openEmail() {
   fireEvent.click(screen.getByRole("button", { name: "Login with Email" }));
 }
 describe("Initial authentication rules", () => {
+  it("closing sign-in skips login and moves forward to the location screen", () => {
+    const onStageChange = vi.fn();
+    render(<PreHomeAuth stage="auth" onStageChange={onStageChange} />);
+    fireEvent.click(screen.getByRole("button", { name: "Close sign-in" }));
+    expect(onStageChange).toHaveBeenCalledExactlyOnceWith("location");
+    expect(onStageChange).not.toHaveBeenCalledWith("welcome");
+  });
   it("phone selection stays on method selection without invoking authentication", () => {
     render(<PreHomeAuth stage="auth" onStageChange={vi.fn()} />);
     fireEvent.click(screen.getByRole("button", { name: "Continue with Phone" }));

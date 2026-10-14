@@ -474,3 +474,38 @@
 }
 .prehome-toast p { margin: 0; flex: 1; font-size: 14px; line-height: 1.5; }
 .prehome-toast button { flex-shrink: 0; }
+
+/* Location selection screen (reached by closing sign-in). */
+.prehome-location-screen { flex-direction: column; }
+.prehome-location {
+  display: flex;
+  width: min(100%, 400px);
+  flex-direction: column;
+  align-items: stretch;
+  margin: auto 0;
+  font-family: Arial, "Noto Sans Devanagari", sans-serif;
+  animation: prehome-enter 380ms ease-out both;
+}
+.prehome-location-pin { align-self: center; width: 34px; height: 34px; color: var(--color-brand-orange); }
+.prehome-location h1 { margin: 14px 0 6px; text-align: center; font-size: 24px; font-weight: 800; color: var(--color-brand-green); }
+.prehome-location-sub { margin: 0 0 22px; text-align: center; color: var(--color-muted-foreground); font-size: 14px; line-height: 1.5; }
+.prehome-gps { margin-bottom: 4px; border-color: var(--color-brand-green); color: var(--color-brand-green); }
+.prehome-gps:hover { background: var(--color-muted); color: var(--color-brand-green); }
+.prehome-location-screen .prehome-divider { margin: 16px 0; font-size: 11px; }
+.prehome-location-search { display: flex; }
+.prehome-location-search .prehome-input-wrap { width: 100%; }
+.prehome-location-search input { height: 48px; }
+.prehome-city-label { margin: 22px 0 10px; color: var(--color-muted-foreground); font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-align: center; text-transform: uppercase; }
+.prehome-cities { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.prehome-city { height: 46px; border-color: var(--auth-border); color: var(--auth-foreground); font-size: 14px; font-weight: 600; }
+.prehome-city:hover { border-color: var(--color-brand-green); color: var(--color-brand-green); }
+.prehome-location-empty { margin: 8px 0 0; color: var(--color-muted-foreground); text-align: center; font-size: 14px; }
+.prehome-location-notice { margin: 16px 0 0; color: var(--color-destructive); text-align: center; font-size: 13px; }
+
+@media (max-width: 520px) {
+  .prehome-cities { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .prehome-location { animation: none; }
+}
