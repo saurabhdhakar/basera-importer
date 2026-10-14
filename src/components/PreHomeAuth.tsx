@@ -19,7 +19,7 @@ import splashLogo from "@/assets/branding/basera-splash-logo.png.asset.json";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import "./PreHomeAuth.css";
 
-type AuthStage = "welcome" | "auth" | "opening";
+type AuthStage = "welcome" | "auth" | "opening" | "location";
 
 type PreHomeAuthProps = {
   stage: AuthStage;
@@ -158,7 +158,7 @@ export function PreHomeAuth({ stage, onStageChange }: PreHomeAuthProps) {
     <main className="prehome-auth prehome-auth-screen" lang={hindi ? "hi" : "en"}>
       <nav className="prehome-nav" aria-label="Sign-in navigation">
         <Button type="button" variant="ghost" size="icon" aria-label="Close sign-in" title="Close sign-in"
-          onClick={() => { selectMethod("options"); onStageChange("welcome"); }}>
+          onClick={() => { selectMethod("options"); onStageChange("location"); }}>
           <X aria-hidden="true" />
         </Button>
         <Button type="button" variant="ghost" className="prehome-help" onClick={() => setDialog("help")}>
