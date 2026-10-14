@@ -19,7 +19,7 @@ afterEach(() => { cleanup(); vi.clearAllMocks(); });
 
 function openEmail() {
   render(<PreHomeAuth stage="auth" onStageChange={vi.fn()} />);
-  fireEvent.click(screen.getByRole("button", { name: "Login with Email", exact: true }));
+  fireEvent.click(screen.getByRole("button", { name: "Login with Email" }));
 }
 describe("Initial authentication rules", () => {
   it("phone selection stays on method selection without invoking authentication", () => {
