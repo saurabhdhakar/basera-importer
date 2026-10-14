@@ -2,10 +2,11 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { WishlistNavigation } from "@/components/WishlistNavigation";
 import { PreHomeAuth } from "@/components/PreHomeAuth";
+import { LocationSelection } from "@/components/LocationSelection";
 import { firebaseConfigured, subscribeFirebaseSession } from "@/lib/firebase-auth";
 import { supabase } from "@/integrations/supabase/client";
 
-type AppStage = "checking" | "welcome" | "auth" | "opening" | "home";
+type AppStage = "checking" | "welcome" | "auth" | "opening" | "location" | "home";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -84,6 +85,10 @@ function Index() {
         <span className="size-8 animate-spin rounded-full border-2 border-primary border-r-transparent" />
       </main>
     );
+  }
+
+  if (stage === "location") {
+    return <LocationSelection onDone={enterHome} />;
   }
 
   if (stage !== "home") {
