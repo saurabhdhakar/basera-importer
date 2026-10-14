@@ -14,7 +14,7 @@ describe("Location selection", () => {
 
   it("filters the city grid by the search query", () => {
     render(<LocationSelection onDone={vi.fn()} />);
-    fireEvent.change(screen.getByRole("textbox", { name: "Search your city" }), { target: { value: "mum" } });
+    fireEvent.change(screen.getByRole("searchbox", { name: "Search your city" }), { target: { value: "mum" } });
     expect(screen.getByRole("button", { name: "Mumbai" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Delhi" })).not.toBeInTheDocument();
   });
