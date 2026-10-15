@@ -526,7 +526,7 @@
 .loc-row > span:first-of-type { flex: 1; }
 .loc-row:hover { background: var(--color-muted); }
 .loc-row svg { color: var(--color-muted-foreground); flex-shrink: 0; }
-.loc-blue, .loc-blue svg { color: var(--auth-link, #2563eb); font-weight: 600; }
+.loc-blue, .loc-blue svg { color: var(--auth-link); font-weight: 600; }
 .loc-gps-text { display: grid; gap: 2px; }
 .loc-gps-text small { font-weight: 400; font-size: 13px; }
 .loc-heading { margin: 0; padding: 18px 16px 8px; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; color: var(--color-muted-foreground); }
