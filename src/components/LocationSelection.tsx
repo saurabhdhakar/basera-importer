@@ -1,111 +1,133 @@
-import { useState, type FormEvent } from "react";
-import { LoaderCircle, MapPin, Navigation, Search } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
+import { ArrowLeft, ChevronRight, Crosshair, LoaderCircle, MapPin, Search, X } from "lucide-react";
+import { STATES, searchLocations } from "@/data/locations";
 import "./PreHomeAuth.css";
 
-const CITIES = [
-  "Delhi",
-  "Mumbai",
-  "Bengaluru",
-  "Hyderabad",
-  "Chennai",
-  "Pune",
-  "Kolkata",
-  "Jaipur",
-  "Lucknow",
-  "Ahmedabad",
-  "Indore",
-  "Noida",
-];
+function save(value: string) {
+  try {
+    window.localStorage.setItem("basera:location", value);
+  } catch {
+    // Location memory is a convenience; ignore storage failures.
+  }
+}
 
 export function LocationSelection({ onDone }: { onDone: () => void }) {
+  const [stateName, setStateName] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [detecting, setDetecting] = useState(false);
   const [notice, setNotice] = useState("");
 
-  const needle = query.trim().toLowerCase();
-  const cities = needle.length > 0 ? CITIES.filter((city) => city.toLowerCase().includes(needle)) : CITIES;
-
-  const pickCity = (city: string) => {
-    try {
-      window.localStorage.setItem("basera:location", city);
-    } catch {
-      // Location memory is a convenience; ignore storage failures.
-    }
+  const pick = (value: string) => {
+    save(value);
     onDone();
   };
 
-  const detectLocation = () => {
+  const detect = () => {
     if (detecting) return;
     setNotice("");
     if (!("geolocation" in navigator)) {
-      setNotice("Location is not supported on this device. Please pick your city below.");
+      setNotice("Location is not supported on this device. Please choose below.");
       return;
     }
     setDetecting(true);
     navigator.geolocation.getCurrentPosition(
-      () => {
-        try {
-          window.localStorage.setItem("basera:location", "Near me");
-        } catch {
-          // Location memory is a convenience; ignore storage failures.
-        }
-        onDone();
-      },
+      () => pick("Near me"),
       () => {
         setDetecting(false);
-        setNotice("We couldn't detect your location. Please pick your city below.");
+        setNotice("We couldn't detect your location. Please choose below.");
       },
       { timeout: 10000 },
     );
   };
 
-  const searchSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (cities.length > 0) pickCity(cities[0]);
-  };
+  const current = stateName ? STATES.find((s) => s.name === stateName) : undefined;
+  const hits = searchLocations(query, stateName ?? undefined);
+  const searching = query.trim().length > 0;
 
   return (
-    <main className="prehome-auth prehome-location-screen" aria-label="Select your location">
-      <section className="prehome-location">
-        <MapPin className="prehome-location-pin" aria-hidden="true" />
-        <h1>Where is your location?</h1>
-        <p className="prehome-location-sub">Choose your city to see homes available near you.</p>
+    <main className="prehome-auth loc-screen" aria-label="Select your location">
+      <section className="loc-panel">
+        <header className="loc-header">
+          {current ? (
+            <button type="button" className="loc-icon" aria-label="Back to states" onClick={() => { setStateName(null); setQuery(""); }}>
+              <ArrowLeft />
+            </button>
+          ) : (
+            <button type="button" className="loc-icon" aria-label="Close" onClick={onDone}>
+              <X />
+            </button>
+          )}
+          <h1>{current ? current.name : "Location"}</h1>
+        </header>
 
-        <Button type="button" variant="outline" className="prehome-social prehome-gps" onClick={detectLocation}>
-          {detecting ? <LoaderCircle className="animate-spin" aria-hidden="true" /> : <Navigation aria-hidden="true" />}
-          {detecting ? "Detecting your location…" : "Use my current location"}
-        </Button>
+        <label className="loc-search">
+          <Search size={18} aria-hidden="true" />
+          <input
+            type="search"
+            maxLength={60}
+            placeholder="Search city, area or neighbourhood"
+            aria-label="Search city, area or neighbourhood"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+        </label>
 
-        <div className="prehome-divider"><span>OR</span></div>
-
-        <form className="prehome-location-search" onSubmit={searchSubmit}>
-          <span className="prehome-input-wrap">
-            <Search size={18} aria-hidden="true" />
-            <input
-              type="search"
-              maxLength={60}
-              placeholder="Search your city"
-              aria-label="Search your city"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-            />
-          </span>
-        </form>
-
-        <p className="prehome-city-label">Popular cities</p>
-        {cities.length > 0 ? (
-          <div className="prehome-cities">
-            {cities.map((city) => (
-              <Button key={city} type="button" variant="outline" className="prehome-city" onClick={() => pickCity(city)}>
-                {city}
-              </Button>
+        {searching ? (
+          <ul className="loc-list" aria-label="Search results">
+            {hits.length === 0 && <li className="loc-empty">No matches for “{query.trim()}”.</li>}
+            {hits.map((h) => (
+              <li key={h.label}>
+                <button
+                  type="button"
+                  className="loc-row"
+                  onClick={() => (h.town ? pick(h.label) : (setStateName(h.state), setQuery("")))}
+                >
+                  <MapPin size={16} aria-hidden="true" />
+                  <span>{h.label}</span>
+                </button>
+              </li>
             ))}
-          </div>
+          </ul>
+        ) : current ? (
+          <>
+            <button type="button" className="loc-row loc-blue" onClick={() => pick(current.name)}>
+              All in {current.name}
+            </button>
+            <p className="loc-heading">CHOOSE CITY</p>
+            <ul className="loc-list">
+              {current.towns.map((t) => (
+                <li key={t.name}>
+                  <button type="button" className="loc-row" onClick={() => pick(`${t.name}, ${current.name}`)}>
+                    <span>{t.name}</span>
+                    {t.arrow && <ChevronRight size={18} aria-hidden="true" />}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </>
         ) : (
-          <p className="prehome-location-empty">No city matches “{query.trim()}”. Please try another spelling.</p>
+          <>
+            <button type="button" className="loc-row loc-blue loc-gps" onClick={detect}>
+              {detecting ? <LoaderCircle className="animate-spin" size={20} /> : <Crosshair size={20} />}
+              <span className="loc-gps-text">
+                <strong>Use current location</strong>
+                <small>{detecting ? "Detecting…" : "Enable Location"}</small>
+              </span>
+            </button>
+            {notice && <p className="loc-notice" role="alert">{notice}</p>}
+            <p className="loc-heading">CHOOSE STATE</p>
+            <ul className="loc-list">
+              {STATES.map((s) => (
+                <li key={s.name}>
+                  <button type="button" className="loc-row" onClick={() => setStateName(s.name)}>
+                    <span>{s.name}</span>
+                    <ChevronRight size={18} aria-hidden="true" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </>
         )}
-        {notice && <p className="prehome-location-notice" role="alert">{notice}</p>}
       </section>
     </main>
   );
