@@ -71,6 +71,7 @@
   --auth-muted-foreground: oklch(0.48 0.025 168);
   --auth-border: oklch(0.87 0.012 168);
   --auth-toast-shadow: 0 8px 28px oklch(0.2 0.02 168 / 16%);
+  --auth-link: oklch(0.55 0.2 260);
   --splash-background: oklch(1 0 0);
   --splash-foreground: oklch(0.36 0.065 168);
   --splash-muted-foreground: oklch(0.48 0.055 168);

@@ -510,3 +510,25 @@
 @media (prefers-reduced-motion: reduce) {
   .prehome-location { animation: none; }
 }
+
+/* Multi-level location picker */
+.loc-screen { align-items: flex-start; padding: 0; }
+.loc-panel { width: min(100%, 520px); margin: 0 auto; font-family: Arial, "Noto Sans Devanagari", sans-serif; }
+.loc-header { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; gap: 14px; padding: 14px 16px; background: var(--color-background); }
+.loc-header h1 { margin: 0; font-size: 19px; font-weight: 700; color: var(--color-foreground); }
+.loc-icon { display: inline-flex; width: 36px; height: 36px; align-items: center; justify-content: center; border-radius: 50%; color: var(--color-foreground); }
+.loc-icon:hover { background: var(--color-muted); }
+.loc-search { display: flex; align-items: center; gap: 10px; margin: 4px 16px 8px; min-height: 46px; padding: 0 12px; border: 1px solid var(--color-border); border-radius: 6px; color: var(--color-muted-foreground); }
+.loc-search:focus-within { border-color: var(--color-brand-green); }
+.loc-search input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--color-foreground); font: inherit; font-size: 15px; }
+.loc-list { margin: 0; padding: 0; list-style: none; }
+.loc-row { display: flex; width: 100%; align-items: center; gap: 10px; padding: 15px 16px; border-bottom: 1px solid var(--color-border); text-align: left; font-size: 15px; color: var(--color-foreground); background: transparent; }
+.loc-row > span:first-of-type { flex: 1; }
+.loc-row:hover { background: var(--color-muted); }
+.loc-row svg { color: var(--color-muted-foreground); flex-shrink: 0; }
+.loc-blue, .loc-blue svg { color: var(--auth-link); font-weight: 600; }
+.loc-gps-text { display: grid; gap: 2px; }
+.loc-gps-text small { font-weight: 400; font-size: 13px; }
+.loc-heading { margin: 0; padding: 18px 16px 8px; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; color: var(--color-muted-foreground); }
+.loc-empty { padding: 18px 16px; color: var(--color-muted-foreground); font-size: 14px; }
+.loc-notice { margin: 8px 16px 0; color: var(--color-destructive); font-size: 13px; }

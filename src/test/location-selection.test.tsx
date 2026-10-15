@@ -3,27 +3,33 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { LocationSelection } from "@/components/LocationSelection";
 
 afterEach(cleanup);
+const search = () => screen.getByRole("searchbox", { name: "Search city, area or neighbourhood" });
 
 describe("Location selection", () => {
-  it("proceeds when a popular city is chosen", () => {
-    const onDone = vi.fn();
-    render(<LocationSelection onDone={onDone} />);
-    fireEvent.click(screen.getByRole("button", { name: "Mumbai" }));
-    expect(onDone).toHaveBeenCalledTimes(1);
-  });
-
-  it("filters the city grid by the search query", () => {
+  it("shows only states by default", () => {
     render(<LocationSelection onDone={vi.fn()} />);
-    fireEvent.change(screen.getByRole("searchbox", { name: "Search your city" }), { target: { value: "mum" } });
-    expect(screen.getByRole("button", { name: "Mumbai" })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Delhi" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Assam" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Guwahati" })).not.toBeInTheDocument();
   });
 
-  it("stores the picked city before moving on", () => {
+  it("drills into a state's towns in order", () => {
+    render(<LocationSelection onDone={vi.fn()} />);
+    fireEvent.click(screen.getByRole("button", { name: "Assam" }));
+    expect(screen.getByText("CHOOSE CITY")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "All in Assam" })).toBeInTheDocument();
+    const rows = screen.getAllByRole("listitem");
+    expect(rows[0]).toHaveTextContent("Abhayapuri");
+    expect(rows[rows.length - 1]).toHaveTextContent("Umrangso");
+  });
+
+  it("finds Kailaras with district and state", () => {
+    const onDone = vi.fn();
     const setItem = vi.spyOn(Storage.prototype, "setItem");
-    render(<LocationSelection onDone={() => {}} />);
-    fireEvent.click(screen.getByRole("button", { name: "Pune" }));
-    expect(setItem).toHaveBeenCalledWith("basera:location", "Pune");
+    render(<LocationSelection onDone={onDone} />);
+    fireEvent.change(search(), { target: { value: "Kail" } });
+    fireEvent.click(screen.getByRole("button", { name: "Kailaras, Morena, Madhya Pradesh" }));
+    expect(setItem).toHaveBeenCalledWith("basera:location", "Kailaras, Morena, Madhya Pradesh");
+    expect(onDone).toHaveBeenCalledTimes(1);
     setItem.mockRestore();
   });
 });
