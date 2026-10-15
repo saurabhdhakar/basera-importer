@@ -503,7 +503,8 @@
 .prehome-location-notice { margin: 16px 0 0; color: var(--color-destructive); text-align: center; font-size: 13px; }
 
 @media (max-width: 520px) {
-  .prehome-cities { grid-template-columns: 1fr; }
+  .prehome-location { width: min(100%, 340px); }
+  .prehome-city { height: 44px; font-size: 13px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
