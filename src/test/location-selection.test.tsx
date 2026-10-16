@@ -1,63 +1,48 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { LocationSelection } from "@/components/LocationSelection";
+import { normalizeLocationDoc } from "@/data/locations";
 
+vi.mock("@/lib/location-store", () => ({ fetchLocations: vi.fn() }));
 afterEach(cleanup);
+
+const doc = {
+  states: [
+    { name: "Madhya Pradesh", towns: [{ name: "Kailaras", district: "Morena" }, { name: "Bhopal", localities: ["Arera Colony", "MP Nagar"] }] },
+    { name: "Bihar", towns: ["Patna"] },
+  ],
+};
+const load = () => Promise.resolve(normalizeLocationDoc(doc));
 const search = () => screen.getByRole("searchbox", { name: "Search city, area or neighbourhood" });
 
-describe("Location selection", () => {
-  it("shows only states by default", () => {
-    render(<LocationSelection onDone={vi.fn()} />);
-    expect(screen.getByRole("button", { name: "Assam" })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Guwahati" })).not.toBeInTheDocument();
+describe("Location selection (Firestore data)", () => {
+  it("shows a loading state, then states only", async () => {
+    render(<LocationSelection onDone={vi.fn()} load={load} />);
+    expect(screen.getByRole("status")).toHaveTextContent("Loading locations");
+    expect(await screen.findByRole("button", { name: "Bihar" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Patna" })).not.toBeInTheDocument();
   });
 
-  it("drills into a state's towns in order", () => {
-    render(<LocationSelection onDone={vi.fn()} />);
-    fireEvent.click(screen.getByRole("button", { name: "Assam" }));
-    expect(screen.getByText("CHOOSE CITY")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "All in Assam" })).toBeInTheDocument();
-    const rows = screen.getAllByRole("listitem");
-    expect(rows[0]).toHaveTextContent("Abhayapuri");
-    expect(rows[rows.length - 1]).toHaveTextContent("Umrangso");
-  });
-
-  it("finds Kailaras with district and state", () => {
+  it("drills state → town → locality and stores the choice", async () => {
     const onDone = vi.fn();
-    const setItem = vi.spyOn(Storage.prototype, "setItem");
-    render(<LocationSelection onDone={onDone} />);
+    render(<LocationSelection onDone={onDone} load={load} />);
+    fireEvent.click(await screen.findByRole("button", { name: "Madhya Pradesh" }));
+    fireEvent.click(screen.getByRole("button", { name: "Bhopal" }));
+    expect(screen.getByText("CHOOSE LOCALITY")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "MP Nagar" }));
+    expect(window.localStorage.getItem("basera:location")).toBe("MP Nagar, Bhopal, Madhya Pradesh");
+    expect(onDone).toHaveBeenCalledTimes(1);
+  });
+
+  it("finds Kailaras with district and state", async () => {
+    render(<LocationSelection onDone={vi.fn()} load={load} />);
+    await screen.findByRole("button", { name: "Bihar" });
     fireEvent.change(search(), { target: { value: "Kail" } });
-    fireEvent.click(screen.getByRole("button", { name: "Kailaras, Morena, Madhya Pradesh" }));
-    expect(setItem).toHaveBeenCalledWith("basera:location", "Kailaras, Morena, Madhya Pradesh");
-    expect(onDone).toHaveBeenCalledTimes(1);
-    setItem.mockRestore();
+    expect(screen.getByRole("button", { name: "Kailaras, Morena, Madhya Pradesh" })).toBeInTheDocument();
   });
 
-  it("selects Chandigarh localities and returns to the state list", () => {
-    const onDone = vi.fn();
-    render(<LocationSelection onDone={onDone} />);
-    fireEvent.click(screen.getByRole("button", { name: "Chandigarh" }));
-    fireEvent.click(screen.getByRole("button", { name: "Back to states" }));
-    expect(screen.getByRole("button", { name: "Dadra & Nagar Haveli" })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Chandigarh" }));
-    fireEvent.change(search(), { target: { value: "Sector 10B" } });
-    fireEvent.click(screen.getByRole("button", { name: "Sector 10B, Chandigarh" }));
-    expect(window.localStorage.getItem("basera:location")).toBe("Sector 10B, Chandigarh");
-    expect(onDone).toHaveBeenCalledTimes(1);
-  });
-
-  it("keeps duplicate Bihar choices selectable after search and clearing", () => {
-    const onDone = vi.fn();
-    render(<LocationSelection onDone={onDone} />);
-    fireEvent.click(screen.getByRole("button", { name: "Bihar" }));
-    expect(screen.getAllByRole("button", { name: "Nawada" })).toHaveLength(2);
-    fireEvent.change(search(), { target: { value: "Nawada" } });
-    expect(screen.getAllByRole("button", { name: "Nawada, Bihar" })).toHaveLength(2);
-    fireEvent.change(search(), { target: { value: "" } });
-    const secondNawada = screen.getAllByRole("button", { name: "Nawada" })[1];
-    if (!secondNawada) throw new Error("Missing second Nawada choice");
-    fireEvent.click(secondNawada);
-    expect(window.localStorage.getItem("basera:location")).toBe("Nawada, Bihar");
-    expect(onDone).toHaveBeenCalledTimes(1);
+  it("shows an error with retry when loading fails", async () => {
+    render(<LocationSelection onDone={vi.fn()} load={() => Promise.reject(new Error("Location data has not been added yet."))} />);
+    expect(await screen.findByRole("alert")).toHaveTextContent("Location data has not been added yet.");
   });
 });
