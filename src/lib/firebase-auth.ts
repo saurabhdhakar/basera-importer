@@ -20,9 +20,13 @@ export const credentialsSchema = z.object({
   name: z.string().trim().max(100).optional(),
 });
 
+export function firebaseApp() {
+  if (!firebaseConfigured) throw new Error("Firebase is not configured yet. Please try again after setup is complete.");
+  return getApps().length ? getApp() : initializeApp(config);
+}
+
 function auth() {
-  if (!firebaseConfigured) throw new Error("Firebase sign-in is not configured yet. Please try again after setup is complete.");
-  return getAuth(getApps().length ? getApp() : initializeApp(config));
+  return getAuth(firebaseApp());
 }
 
 export function loginWithGoogle() {
