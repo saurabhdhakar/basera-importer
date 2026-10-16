@@ -60,7 +60,8 @@ describe("Supplied location datasets", () => {
   });
 
   it("finds entries in every new dataset and scopes searches to a selected state", () => {
-    for (const [query, state] of [["Patna", "Bihar"], ["Sector 10B", "Chandigarh"], ["Raipur", "Chhattisgarh"], ["Silvassa", "Dadra & Nagar Haveli"], ["Kachigam", "Daman & Diu"]]) {
+    const cases: [string, string][] = [["Patna", "Bihar"], ["Sector 10B", "Chandigarh"], ["Raipur", "Chhattisgarh"], ["Silvassa", "Dadra & Nagar Haveli"], ["Kachigam", "Daman & Diu"]];
+    for (const [query, state] of cases) {
       expect(searchLocations(query, state)).toContainEqual({ town: query, state, label: `${query}, ${state}` });
       expect(searchLocations(query, state).every((hit) => hit.state === state)).toBe(true);
     }

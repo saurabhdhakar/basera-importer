@@ -1,6 +1,6 @@
 # Basera welcome and sign-in
-- [ ] Merge the five supplied location lists with exact ordering, arrow flags, and Chandigarh locality heading.
-- [ ] Verify state drill-down, type-ahead search, and location selection.
+- [x] Merge the five supplied location lists with exact ordering, arrow flags, and Chandigarh locality heading.
+- [x] Verify state drill-down, type-ahead search, and location selection.
 - [x] Add Firebase Google, explicit email modes, and password-reset actions.
 - [ ] Activate and verify real Firebase sign-in/reset delivery — blocked by missing Firebase web configuration and enabled providers.
 - [x] Keep Phone in place with the exact maintenance alert.

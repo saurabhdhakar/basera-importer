@@ -36,12 +36,12 @@ describe("Location selection", () => {
   it("selects Chandigarh localities and returns to the state list", () => {
     const onDone = vi.fn();
     render(<LocationSelection onDone={onDone} />);
-    fireEvent.click(screen.getByRole("button", { name: "Chandigarh", exact: true }));
+    fireEvent.click(screen.getByRole("button", { name: "Chandigarh" }));
     fireEvent.click(screen.getByRole("button", { name: "Back to states" }));
-    expect(screen.getByRole("button", { name: "Dadra & Nagar Haveli", exact: true })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Chandigarh", exact: true }));
+    expect(screen.getByRole("button", { name: "Dadra & Nagar Haveli" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Chandigarh" }));
     fireEvent.change(search(), { target: { value: "Sector 10B" } });
-    fireEvent.click(screen.getByRole("button", { name: "Sector 10B, Chandigarh", exact: true }));
+    fireEvent.click(screen.getByRole("button", { name: "Sector 10B, Chandigarh" }));
     expect(window.localStorage.getItem("basera:location")).toBe("Sector 10B, Chandigarh");
     expect(onDone).toHaveBeenCalledTimes(1);
   });
@@ -49,12 +49,14 @@ describe("Location selection", () => {
   it("keeps duplicate Bihar choices selectable after search and clearing", () => {
     const onDone = vi.fn();
     render(<LocationSelection onDone={onDone} />);
-    fireEvent.click(screen.getByRole("button", { name: "Bihar", exact: true }));
-    expect(screen.getAllByRole("button", { name: "Nawada", exact: true })).toHaveLength(2);
+    fireEvent.click(screen.getByRole("button", { name: "Bihar" }));
+    expect(screen.getAllByRole("button", { name: "Nawada" })).toHaveLength(2);
     fireEvent.change(search(), { target: { value: "Nawada" } });
-    expect(screen.getAllByRole("button", { name: "Nawada, Bihar", exact: true })).toHaveLength(2);
+    expect(screen.getAllByRole("button", { name: "Nawada, Bihar" })).toHaveLength(2);
     fireEvent.change(search(), { target: { value: "" } });
-    fireEvent.click(screen.getAllByRole("button", { name: "Nawada", exact: true })[1]);
+    const secondNawada = screen.getAllByRole("button", { name: "Nawada" })[1];
+    if (!secondNawada) throw new Error("Missing second Nawada choice");
+    fireEvent.click(secondNawada);
     expect(window.localStorage.getItem("basera:location")).toBe("Nawada, Bihar");
     expect(onDone).toHaveBeenCalledTimes(1);
   });
