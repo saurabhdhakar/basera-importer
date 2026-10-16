@@ -75,8 +75,8 @@ export function LocationSelection({ onDone }: { onDone: () => void }) {
         {searching ? (
           <ul className="loc-list" aria-label="Search results">
             {hits.length === 0 && <li className="loc-empty">No matches for “{query.trim()}”.</li>}
-            {hits.map((h) => (
-              <li key={h.label}>
+            {hits.map((h, index) => (
+              <li key={`${h.label}-${index}`}>
                 <button
                   type="button"
                   className="loc-row"
@@ -93,10 +93,10 @@ export function LocationSelection({ onDone }: { onDone: () => void }) {
             <button type="button" className="loc-row loc-blue" onClick={() => pick(current.name)}>
               All in {current.name}
             </button>
-            <p className="loc-heading">CHOOSE CITY</p>
+            <p className="loc-heading">{current.selectionHeading ?? "CHOOSE CITY"}</p>
             <ul className="loc-list">
-              {current.towns.map((t) => (
-                <li key={t.name}>
+              {current.towns.map((t, index) => (
+                <li key={`${t.name}-${index}`}>
                   <button type="button" className="loc-row" onClick={() => pick(`${t.name}, ${current.name}`)}>
                     <span>{t.name}</span>
                     {t.arrow && <ChevronRight size={18} aria-hidden="true" />}
